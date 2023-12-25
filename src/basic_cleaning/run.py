@@ -6,6 +6,7 @@ import argparse
 import logging
 import wandb
 import pandas as pd
+import numpy as np
 import os
 
 
@@ -27,9 +28,17 @@ def go(args):
     idx = df['price'].between(args.min_price, args.max_price)
     df = df[idx].copy()
 
-    logger.info("Converting last_review to datetime")
-    df['last_review'] = pd.to_datetime(df['last_review'])
-    
+    logger.info("Converting last_review to seconds")
+    df['last_review'] = pd.to_datetime(df['last_review'], errors='coerce')
+    df['last_review'] = df['last_review'].apply(lambda x: x.timestamp() if not pd.isnull(x) else np.nan)
+
+    logger.info("Removing null values from 'name' and 'host_name' columns")
+    df = df.dropna(subset=['name', 'host_name'])
+
+    logger.info("Imputing null values in 'last_review' and 'reviews_per_month' columns with the mean of each group defined by 'neighbourhood_group'")
+    df['last_review'] = df.groupby('neighbourhood_group')['last_review'].transform(lambda x: x.fillna(x.mean()))
+    df['reviews_per_month'] = df.groupby('neighbourhood_group')['reviews_per_month'].transform(lambda x: x.fillna(x.mean()))
+
     # Dataframe to csv
     filename = "clean_sample.csv"
     df.to_csv(filename, index=False)

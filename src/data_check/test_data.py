@@ -68,3 +68,6 @@ def test_row_count(data):
 
 def test_price_range(data, min_price, max_price):
     assert (data['price'] >= min_price).all() and (data['price'] <= max_price).all()
+
+def test_no_null_values(data):
+    assert not data.isnull().values.any()
