@@ -39,6 +39,10 @@ def go(args):
     df['last_review'] = df.groupby('neighbourhood_group')['last_review'].transform(lambda x: x.fillna(x.mean()))
     df['reviews_per_month'] = df.groupby('neighbourhood_group')['reviews_per_month'].transform(lambda x: x.fillna(x.mean()))
 
+    #Drop rows in the dataset that are not in the proper geolocation
+    idx = df['longitude'].between(-74.25, -73.50) & df['latitude'].between(40.5, 41.2)
+    df = df[idx].copy()
+    
     # Dataframe to csv
     filename = "clean_sample.csv"
     df.to_csv(filename, index=False)
